@@ -1,5 +1,5 @@
 {
-  "name": "ts-sdk",
+  "name": "opengradient-sdk",
   "version": "1.0.0",
   "description": "Official TypeScript SDK for interacting with OpenGradient network",
   "main": "dist/index.js",
