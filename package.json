@@ -1,7 +1,7 @@
 {
   "name": "ts-sdk",
   "version": "1.0.0",
-  "description": "",
+  "description": "Official TypeScript SDK for interacting with OpenGradient network",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -19,9 +19,16 @@
     "type": "git",
     "url": "git+https://github.com/OpenGradient/ts-sdk.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "opengradient",
+    "sdk",
+    "typescript",
+    "web3",
+    "blockchain",
+    "ethereum"
+  ],
+  "author": "OpenGradient",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/OpenGradient/ts-sdk/issues"
   },
