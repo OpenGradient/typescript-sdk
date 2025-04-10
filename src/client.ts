@@ -9,15 +9,17 @@ import {
   OpenGradientError,
   RawModelInput,
 } from "./types";
-import { convertToModelInput, convertToModelOutput, sleep } from "./utils";
-import { DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY_SEC } from "./constants";
+import { convertToModelInput, convertToModelOutput, sleep, getInferenceResultFromNode } from "./utils";
+import { DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY_SEC, INFERENCE_PRECOMPILE_ADDRESS } from "./constants";
 import { DEFAULT_CONFIG } from "./defaults";
+
 
 export class Client {
   private readonly web3: Web3;
   private readonly account: Account;
   private readonly contractAddress: string;
   private readonly contract: Contract;
+  private readonly precompileContract: Contract;
 
   constructor(config: ClientConfig) {
     const rpcUrl = DEFAULT_CONFIG.rpcUrl;
@@ -34,6 +36,12 @@ export class Client {
     this.contract = new this.web3.eth.Contract(
       inferenceAbi,
       this.contractAddress,
+    );
+
+    const precompileAbi = require("./abi/precompile.json");
+    this.precompileContract = new this.web3.eth.Contract(
+      precompileAbi,
+      INFERENCE_PRECOMPILE_ADDRESS,
     );
   }
 
@@ -130,7 +138,24 @@ export class Client {
         event.data,
         event.topics.slice(1),
       );
-      const modelOutput = convertToModelOutput(decodedLog);
+
+      var modelOutput = convertToModelOutput(decodedLog);
+      // if model out is empty, check inference event through precompile contract
+      if (Object.keys(modelOutput).length === 0) {
+        const precompileEventAbi = this.precompileContract.options.jsonInterface.find(
+          (x) => x.name === "ModelInferenceEvent",
+        )!.inputs;
+
+        const precompileEvent = receipt.logs[0];
+        const precompileDecodedLog = this.web3.eth.abi.decodeLog(
+          precompileEventAbi || [],
+          precompileEvent.data,
+          precompileEvent.topics.slice(1),
+        );
+
+        const inference_result = await getInferenceResultFromNode(DEFAULT_CONFIG.apiUrl, precompileDecodedLog.inferenceID, inferenceMode);
+        modelOutput = convertToModelOutput(inference_result)
+      }
 
       return [txHash.transactionHash, modelOutput];
     };
