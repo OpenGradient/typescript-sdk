@@ -61,66 +61,137 @@ export function convertToModelInput(input: RawModelInput): any {
 
 export function convertToModelOutput(eventData: any): RawModelInput {
   const outputDict: RawModelInput = {};
-  const output = eventData?.output || {};
-
-  if (output && typeof output === 'object') {
-    // Handle number tensors
-    for (const tensor of output.numbers || []) {
-      if (tensor && typeof tensor === 'object') {
-        const name = tensor.name;
-        const shape = tensor.shape || [];
-        const values: number[] = [];
-        
-        for (const v of tensor.values || []) {
-          if (v && typeof v === 'object') {
-            const value = parseInt(String(v.value));
-            const decimals = parseInt(String(v.decimals));
-            values.push(value / Math.pow(10, decimals));
-          } else {
-            console.warn(`Unexpected number type: ${typeof v}`);
-          }
-        }
-        
-        outputDict[name] = reshapeArray(values, shape);
-      } else {
-        console.warn(`Unexpected tensor type: ${typeof tensor}`);
-      }
-    }
-    
-    for (const tensor of output.strings || []) {
-      if (tensor && typeof tensor === 'object') {
-        const name = tensor.name;
-        const shape = tensor.shape || [];
-        const values = tensor.values || [];
-        
-        outputDict[name] = reshapeArray(values, shape);
-      } else {
-        console.warn(`Unexpected tensor type: ${typeof tensor}`);
-      }
-    }
-    
-    // Parse JSON objects - similar to the Python version
-    for (const tensor of output.jsons || []) {
-      if (tensor && typeof tensor === 'object') {
-        const name = tensor.name;
-        const value = tensor.value;
-        
+  
+  try {
+    const output = eventData?.output || eventData;
+    if (Array.isArray(output) || (output && output[0] && output[1])) {
+      const numberTensors = Array.isArray(output[0]) ? output[0] : [];
+      for (const tensor of numberTensors || []) {
         try {
-          const parsedValue = typeof value === 'string' ? JSON.parse(value) : value;
-          outputDict[name] = parsedValue;
-        } catch (error) {
-          console.warn(`Failed to parse JSON value for ${name}: ${error}`);
-          outputDict[name] = value;
+          if (Array.isArray(tensor) && tensor.length >= 3) {
+            const name = tensor[0];
+            const valuesArray = tensor[1];
+            const shape = Array.isArray(tensor[2]) ? tensor[2].map(Number) : [];
+            
+            const values = Array.isArray(valuesArray) 
+              ? valuesArray.map(v => Array.isArray(v) ? Number(v[0]) : Number(v)) 
+              : [];
+            
+            if (shape.length === 1) {
+              outputDict[name] = values;
+            } else if (shape.length === 2) {
+              const rows = shape[0];
+              const cols = shape[1];
+              const matrix: number[][] = [];
+              
+              for (let i = 0; i < rows; i++) {
+                const row: number[] = [];
+                for (let j = 0; j < cols; j++) {
+                  row.push(values[i * cols + j]);
+                }
+                matrix.push(row);
+              }
+              
+              outputDict[name] = matrix;
+            }
+          }
+        } catch (tensorError) {
+          console.error("Error processing number tensor:", tensorError);
         }
-      } else {
-        console.warn(`Unexpected tensor type: ${typeof tensor}`);
+      }
+      
+      // Handle string tensors
+      const stringTensors = Array.isArray(output[1]) ? output[1] : [];
+      for (const tensor of stringTensors || []) {
+        try {
+          if (Array.isArray(tensor) && tensor.length >= 2) {
+            const name = tensor[0];
+            const values = tensor[1];
+            
+            if (Array.isArray(values)) {
+              outputDict[name] = values.length === 1 ? values[0] : values;
+            }
+          }
+        } catch (tensorError) {
+          console.error("Error processing string tensor:", tensorError);
+        }
+      }
+      
+      return outputDict;
+    }
+    
+    if (output && typeof output === 'object') {
+      // Handle number tensors
+      for (const tensor of output.numbers || []) {
+        try {
+          if (tensor && typeof tensor === 'object') {
+            const name = tensor.name;
+            const shape = tensor.shape || [];
+            const values: number[] = [];
+            
+            console.log(`Processing number tensor "${name}":`, {
+              shape,
+              valuesCount: tensor.values?.length || 0
+            });
+            
+            for (const v of tensor.values || []) {
+              if (v && typeof v === 'object') {
+                const value = parseInt(String(v.value));
+                const decimals = parseInt(String(v.decimals));
+                values.push(value / Math.pow(10, decimals));
+              } else {
+                console.warn(`Unexpected number type: ${typeof v}, value:`, v);
+              }
+            }
+            
+            outputDict[name] = reshapeArray(values, shape);
+          }
+        } catch (tensorError) {
+          console.error("Error processing number tensor:", tensorError);
+        }
+      }
+      
+      // Parse strings
+      for (const tensor of output.strings || []) {
+        try {
+          if (tensor && typeof tensor === 'object') {
+            const name = tensor.name;
+            const shape = tensor.shape || [];
+            const values = tensor.values || [];
+            
+            outputDict[name] = reshapeArray(values, shape);
+          }
+        } catch (tensorError) {
+          console.error("Error processing string tensor:", tensorError);
+        }
+      }
+      
+      // Parse JSON objects
+      for (const tensor of output.jsons || []) {
+        try {
+          if (tensor && typeof tensor === 'object') {
+            const name = tensor.name;
+            const value = tensor.value;
+            
+            try {
+              const parsedValue = typeof value === 'string' ? JSON.parse(value) : value;
+              outputDict[name] = parsedValue;
+            } catch (parseError) {
+              console.warn(`Failed to parse JSON value for ${name}: ${parseError}`);
+              outputDict[name] = value;
+            }
+          }
+        } catch (tensorError) {
+          console.error("Error processing JSON tensor:", tensorError);
+        }
       }
     }
-  } else {
-    console.warn(`Unexpected output type: ${typeof output}`);
+    
+    return outputDict;
+  } catch (error) {
+    console.error("Error in convertToModelOutput:", error);
+    return outputDict;
   }
-
-  return outputDict;
 }
 
 function reshapeArray(array: any[], shape: number[]): any {
