@@ -42,7 +42,7 @@ describe("OpenGradient Client Integration Tests", () => {
         console.log("Transaction Hash:", txHash);
         console.log("Model Output:", output);
 
-        // // Basic validation
+        // Basic validation
         expect(txHash).toBeTruthy();
         expect(output).toBeDefined();
 
