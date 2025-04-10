@@ -1,6 +1,7 @@
 export enum InferenceMode {
   VANILLA = 0,
   TEE = 1,
+  ZKML = 2,
 }
 
 export type RawModelInput = {
@@ -47,4 +48,16 @@ export class OpenGradientError extends Error {
     this.name = "OpenGradientError";
     this.statusCode = statusCode;
   }
+}
+
+export interface DecodedInferencePayload {
+  InferenceResult?: { // Using optional chaining ?. handles if InferenceResult is missing
+      VanillaResult?: { model_output?: any };
+      TeeNodeResult?: {
+          Response?: {
+              VanillaResponse?: { model_output?: any };
+          };
+      };
+      ZkmlResult?: { model_output?: any };
+  };
 }

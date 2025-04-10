@@ -18,6 +18,7 @@ export {
   REGULAR_TX_TIMEOUT,
   DEFAULT_MAX_RETRY,
   DEFAULT_RETRY_DELAY_SEC,
+  INFERENCE_PRECOMPILE_ADDRESS,
 } from "./constants";
 
 export {

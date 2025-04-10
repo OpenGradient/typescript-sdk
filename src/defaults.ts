@@ -3,7 +3,12 @@
 /**
  * Default RPC URL for the OpenGradient blockchain
  */
-export const DEFAULT_RPC_URL = "http://18.188.176.119:8545";
+export const DEFAULT_RPC_URL = "https://eth-devnet.opengradient.ai";
+
+/**
+ * Default API URL for the OpenGradient blockchain
+ */
+export const DEFAULT_API_URL = "https://sdk-devnet.opengradient.ai";
 
 /**
  * Base URL for the OpenGradient faucet service
@@ -60,6 +65,7 @@ export const getFaucetUrl = (address: string): string => {
 // Export a default configuration object
 export const DEFAULT_CONFIG = {
   rpcUrl: DEFAULT_RPC_URL,
+  apiUrl: DEFAULT_API_URL,
   inferenceContractAddress: DEFAULT_INFERENCE_CONTRACT_ADDRESS,
   imageGenHost: DEFAULT_IMAGE_GEN_HOST,
   imageGenPort: DEFAULT_IMAGE_GEN_PORT,
