@@ -139,7 +139,7 @@ export class Client {
         event.topics.slice(1),
       );
 
-      var modelOutput = convertToModelOutput(decodedLog);
+      const modelOutput = convertToModelOutput(decodedLog);
       // if model out is empty, check inference event through precompile contract
       if (Object.keys(modelOutput).length === 0) {
         const precompileEventAbi = this.precompileContract.options.jsonInterface.find(
@@ -299,10 +299,9 @@ export class Client {
         this.account.address,
         "pending",
       );
-      // const estimatedGas = await runFunction.estimateGas({
-      //   from: this.account.address,
-      // });
-      const estimatedGas = 100000;
+      const estimatedGas = await runFunction.estimateGas({
+        from: this.account.address,
+      });
       const gasLimit = Math.floor(estimatedGas * 1.5);
       const gasPrice = await this.web3.eth.getGasPrice();
 

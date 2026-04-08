@@ -205,7 +205,7 @@ function reshapeArray(array: any[], shape: number[]): any {
   
   const result = [];
   const lastDimSize = shape[shape.length - 1];
-  const subShape = shape.slice(0, -1);
+  const subShape = shape.slice(1);
   
   for (let i = 0; i < shape[0]; i++) {
     if (shape.length === 2) {
