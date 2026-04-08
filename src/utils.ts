@@ -194,7 +194,7 @@ export function convertToModelOutput(eventData: any): RawModelInput {
   }
 }
 
-function reshapeArray(array: any[], shape: number[]): any {
+export function reshapeArray(array: any[], shape: number[]): any {
   if (!shape || shape.length === 0) {
     return array;
   }
