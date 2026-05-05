@@ -23,14 +23,16 @@ describe("Client construction", () => {
 
 describe("Public exports", () => {
   it("exposes TEE_LLM models with provider/model format", () => {
-    expect(TEE_LLM.CLAUDE_3_5_HAIKU).toBe("anthropic/claude-3.5-haiku");
-    expect(TEE_LLM.GPT_4O).toBe("openai/gpt-4o");
+    expect(TEE_LLM.CLAUDE_HAIKU_4_5).toBe("anthropic/claude-haiku-4-5");
+    expect(TEE_LLM.GPT_5).toBe("openai/gpt-5");
+    expect(TEE_LLM.GEMINI_3_FLASH).toBe("google/gemini-3-flash-preview");
+    expect(TEE_LLM.GROK_4).toBe("x-ai/grok-4");
   });
 
   it("exposes X402SettlementMode values matching the wire protocol", () => {
-    expect(X402SettlementMode.SETTLE).toBe("settle");
-    expect(X402SettlementMode.SETTLE_BATCH).toBe("settle-batch");
-    expect(X402SettlementMode.SETTLE_METADATA).toBe("settle-metadata");
+    expect(X402SettlementMode.PRIVATE).toBe("private");
+    expect(X402SettlementMode.BATCH_HASHED).toBe("batch");
+    expect(X402SettlementMode.INDIVIDUAL_FULL).toBe("individual");
   });
 
   it("defaults the settlement network to base", () => {

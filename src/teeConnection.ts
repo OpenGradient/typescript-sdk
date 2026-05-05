@@ -58,6 +58,7 @@ export interface TEEConnection {
   close(): Promise<void>;
 }
 
+/** Re-resolve TEE from the registry every 5 minutes. */
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
@@ -114,8 +115,10 @@ export class StaticTEEConnection implements TEEConnection {
  */
 export class RegistryTEEConnection implements TEEConnection {
   private active: ActiveTEE | null = null;
+  /** In-flight connect promise, used to dedupe concurrent resolves. */
   private connecting: Promise<ActiveTEE> | null = null;
   private refreshTimer: NodeJS.Timeout | null = null;
+  private closed = false;
 
   constructor(private readonly registry: TEERegistry) {}
 
@@ -131,17 +134,26 @@ export class RegistryTEEConnection implements TEEConnection {
   }
 
   async reconnect(): Promise<void> {
+    if (this.closed) return;
+    // Coalesce concurrent reconnect attempts onto a single resolution.
+    if (!this.connecting) this.connecting = this.connect();
     const old = this.active?.dispatcher;
-    this.active = await this.connect();
     try {
-      await old?.close();
-    } catch {
-      /* ignore */
+      this.active = await this.connecting;
+    } finally {
+      this.connecting = null;
+    }
+    if (old && old !== this.active.dispatcher) {
+      try {
+        await old.close();
+      } catch {
+        /* ignore */
+      }
     }
   }
 
   ensureRefreshLoop(): void {
-    if (this.refreshTimer) return;
+    if (this.refreshTimer || this.closed) return;
     this.refreshTimer = setInterval(() => {
       void this.runHealthCheck();
     }, REFRESH_INTERVAL_MS);
@@ -151,6 +163,7 @@ export class RegistryTEEConnection implements TEEConnection {
   }
 
   async close(): Promise<void> {
+    this.closed = true;
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
@@ -183,7 +196,7 @@ export class RegistryTEEConnection implements TEEConnection {
   }
 
   private async runHealthCheck(): Promise<void> {
-    if (!this.active) return;
+    if (!this.active || this.closed) return;
     try {
       const tees = await this.registry.getActiveTEEsByType(TEE_TYPE_LLM_PROXY);
       if (tees.some((t) => t.teeId === this.active!.teeId)) return;
