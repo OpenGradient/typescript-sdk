@@ -22,11 +22,19 @@ async function main() {
   const result = await client.llm.chat({
     model: TEE_LLM.GPT_4_1_2025_04_14,
     messages,
-    x402SettlementMode: X402SettlementMode.SETTLE_METADATA,
+    x402SettlementMode: X402SettlementMode.INDIVIDUAL_FULL,
   });
 
   console.log(`Response: ${result.chatOutput?.content}`);
-  console.log(`Payment hash: ${result.transactionHash}`);
+  console.log(`Payment hash: ${result.paymentHash ?? "(none)"}`);
+  if (result.dataSettlementTransactionHash) {
+    console.log(
+      `Data settlement tx: ${result.dataSettlementTransactionHash}`,
+    );
+  }
+  if (result.teeSignature) {
+    console.log(`TEE signature: ${result.teeSignature.slice(0, 16)}…`);
+  }
 }
 
 main().catch((err) => {

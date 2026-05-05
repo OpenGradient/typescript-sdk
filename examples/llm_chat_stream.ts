@@ -20,7 +20,7 @@ async function main() {
   const stream = client.llm.chat({
     model: TEE_LLM.GPT_4_1_2025_04_14,
     messages,
-    x402SettlementMode: X402SettlementMode.SETTLE_METADATA,
+    x402SettlementMode: X402SettlementMode.INDIVIDUAL_FULL,
     stream: true,
     maxTokens: 1000,
   });

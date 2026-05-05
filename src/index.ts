@@ -8,11 +8,12 @@ export type {
   ChatParams,
   ClientConfig,
   CompletionParams,
+  ResponseFormat,
   StreamChoice,
   StreamChunk,
   StreamDelta,
-  StreamUsage,
   TextGenerationOutput,
+  TokenUsage,
   Tool,
   ToolFunction,
 } from "./types";
