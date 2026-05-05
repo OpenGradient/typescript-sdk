@@ -24,7 +24,9 @@ export class Client {
 
   constructor(config: ClientConfig) {
     const privateKey = (
-      config.privateKey.startsWith("0x") ? config.privateKey : `0x${config.privateKey}`
+      config.privateKey.startsWith("0x")
+        ? config.privateKey
+        : `0x${config.privateKey}`
     ) as `0x${string}`;
 
     this.llm = new LLM({
@@ -33,7 +35,8 @@ export class Client {
       maxPaymentValue: config.maxPaymentValue,
       serverUrl: config.llmServerUrl ?? DEFAULT_OPENGRADIENT_LLM_SERVER_URL,
       streamingServerUrl:
-        config.llmStreamingServerUrl ?? DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
+        config.llmStreamingServerUrl ??
+        DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
     });
   }
 }

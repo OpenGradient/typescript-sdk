@@ -52,7 +52,6 @@ export class LLM {
       x402SettlementMode = X402SettlementMode.SETTLE_BATCH,
     } = params;
 
-
     const payload: Record<string, any> = {
       model: stripProvider(model),
       prompt,
@@ -92,7 +91,9 @@ export class LLM {
     return this.chatNonStreaming(params);
   }
 
-  private async chatNonStreaming(params: ChatParams): Promise<TextGenerationOutput> {
+  private async chatNonStreaming(
+    params: ChatParams,
+  ): Promise<TextGenerationOutput> {
     const payload = this.buildChatPayload(params, false);
     const response = await this.post(
       `${trimSlash(this.config.serverUrl)}/v1/chat/completions`,
@@ -102,7 +103,6 @@ export class LLM {
 
     const result = (await response.json()) as {
       choices?: Array<{
-
         message?: any;
         finish_reason?: string;
       }>;
@@ -170,7 +170,6 @@ export class LLM {
   private buildChatPayload(
     params: ChatParams,
     stream: boolean,
-
   ): Record<string, any> {
     const {
       model,
@@ -181,7 +180,6 @@ export class LLM {
       tools,
       toolChoice,
     } = params;
-
 
     const payload: Record<string, any> = {
       model: stripProvider(model),
@@ -200,7 +198,10 @@ export class LLM {
 
   private async getFetch(): Promise<typeof fetch> {
     if (!this.fetchWithPayment) {
-      const signer = await createSigner(this.config.network, this.config.privateKey);
+      const signer = await createSigner(
+        this.config.network,
+        this.config.privateKey,
+      );
       this.fetchWithPayment = wrapFetchWithPayment(
         fetch,
         signer,
@@ -252,9 +253,7 @@ function trimSlash(url: string): string {
   return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
-
 function parseStreamChunk(data: any): StreamChunk {
-
   const choices: StreamChoice[] = (data.choices ?? []).map((c: any) => ({
     delta: {
       content: c.delta?.content,
@@ -274,8 +273,9 @@ function parseStreamChunk(data: any): StreamChunk {
     : undefined;
 
   const is_final =
-    choices.some((c) => c.finish_reason !== null && c.finish_reason !== undefined) ||
-    !!usage;
+    choices.some(
+      (c) => c.finish_reason !== null && c.finish_reason !== undefined,
+    ) || !!usage;
 
   return {
     choices,

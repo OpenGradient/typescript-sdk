@@ -1,11 +1,7 @@
 export { Client } from "./client";
 export { LLM } from "./llm";
 
-export {
-  TEE_LLM,
-  X402SettlementMode,
-  OpenGradientError,
-} from "./types";
+export { TEE_LLM, X402SettlementMode, OpenGradientError } from "./types";
 
 export type {
   ChatMessage,
