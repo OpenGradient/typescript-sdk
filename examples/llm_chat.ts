@@ -3,13 +3,17 @@
 //
 // Run with: OG_PRIVATE_KEY=0x... npx ts-node examples/llm_chat.ts
 
-import { Client, TEE_LLM, X402SettlementMode } from "../src";
+import { privateKeyToAccount } from "viem/accounts";
+import { Client, TEE_LLM, X402SettlementMode, ensureOpgApproval } from "../src";
 
 async function main() {
-  const privateKey = process.env.OG_PRIVATE_KEY;
+  const privateKey = process.env.OG_PRIVATE_KEY as `0x${string}` | undefined;
   if (!privateKey) {
     throw new Error("OG_PRIVATE_KEY environment variable is not set");
   }
+
+  const account = privateKeyToAccount(privateKey);
+  await ensureOpgApproval(account, 0.1);
 
   const client = new Client({ privateKey });
 
