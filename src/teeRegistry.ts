@@ -93,6 +93,10 @@ export class TEERegistry {
       return [];
     }
 
+    console.debug(
+      `[TEERegistry] getActiveTEEs(type=${teeType}) returned ${teeInfos.length} entries`,
+    );
+
     const out: TEEEndpoint[] = [];
     for (const tee of teeInfos) {
       if (
@@ -100,6 +104,9 @@ export class TEERegistry {
         !tee.tlsCertificate ||
         tee.tlsCertificate === "0x"
       ) {
+        console.debug(
+          `[TEERegistry] skipping TEE (endpoint=${tee.endpoint || "<empty>"}, certLen=${tee.tlsCertificate?.length ?? 0})`,
+        );
         continue;
       }
       out.push({
@@ -109,6 +116,10 @@ export class TEERegistry {
         paymentAddress: tee.paymentAddress,
       });
     }
+    console.debug(
+      `[TEERegistry] ${out.length} usable TEEs:`,
+      out.map((t) => ({ teeId: t.teeId, endpoint: t.endpoint })),
+    );
     return out;
   }
 
@@ -118,7 +129,14 @@ export class TEERegistry {
    */
   async getLLMTEE(): Promise<TEEEndpoint | null> {
     const tees = await this.getActiveTEEsByType(TEE_TYPE_LLM_PROXY);
-    if (tees.length === 0) return null;
-    return tees[Math.floor(Math.random() * tees.length)];
+    if (tees.length === 0) {
+      console.debug("[TEERegistry] getLLMTEE: no active LLM proxy TEEs found");
+      return null;
+    }
+    const picked = tees[Math.floor(Math.random() * tees.length)];
+    console.debug(
+      `[TEERegistry] getLLMTEE: picked ${picked.teeId} @ ${picked.endpoint}`,
+    );
+    return picked;
   }
 }

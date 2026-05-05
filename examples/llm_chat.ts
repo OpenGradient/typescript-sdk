@@ -26,7 +26,7 @@ async function main() {
   });
 
   console.log(`Response: ${result.chatOutput?.content}`);
-  console.log(`Payment hash: ${result.paymentHash}`);
+  console.log(`Payment hash: ${result.transactionHash}`);
 }
 
 main().catch((err) => {

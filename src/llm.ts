@@ -1,4 +1,8 @@
-import { createSigner, wrapFetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment } from "@x402/fetch";
+import { x402Client } from "@x402/core/client";
+import { UptoEvmScheme } from "@x402/evm";
+import { registerExactEvmScheme } from "@x402/evm/exact/client";
+import { privateKeyToAccount } from "viem/accounts";
 import type { Agent } from "undici";
 import {
   ChatParams,
@@ -34,7 +38,7 @@ export interface LLMConfig {
  * `llmServerUrl` on the `Client` to override with a hardcoded URL.
  */
 export class LLM {
-  private signerPromise?: Promise<unknown>;
+  private x402ClientInstance?: x402Client;
 
   constructor(private readonly config: LLMConfig) {}
 
@@ -200,29 +204,26 @@ export class LLM {
     return payload;
   }
 
-  private async getSigner(): Promise<unknown> {
-    if (!this.signerPromise) {
-      this.signerPromise = createSigner(
-        this.config.network,
-        this.config.privateKey,
-      );
+  private getX402Client(): x402Client {
+    if (!this.x402ClientInstance) {
+      const account = privateKeyToAccount(this.config.privateKey);
+      const client = new x402Client();
+      registerExactEvmScheme(client, { signer: account });
+      // The TEE may quote the "upto" scheme — register it on EVM networks too.
+      client.register("eip155:*", new UptoEvmScheme(account));
+      this.x402ClientInstance = client;
     }
-    return this.signerPromise;
+    return this.x402ClientInstance;
   }
 
   /**
    * Build a paid fetch that injects the TEE's pinned TLS dispatcher into every
    * request (including x402 payment retries).
    */
-  private async buildPaidFetch(dispatcher: Agent): Promise<typeof fetch> {
-    const signer = await this.getSigner();
+  private buildPaidFetch(dispatcher: Agent): typeof fetch {
     const baseFetch: typeof fetch = ((input: any, init?: any) =>
       fetch(input, { ...(init ?? {}), dispatcher } as any)) as typeof fetch;
-    return wrapFetchWithPayment(
-      baseFetch,
-      signer as any,
-      this.config.maxPaymentValue,
-    ) as typeof fetch;
+    return wrapFetchWithPayment(baseFetch, this.getX402Client()) as typeof fetch;
   }
 
   /**
@@ -261,7 +262,7 @@ export class LLM {
   ): Promise<{ response: Response; tee: ActiveTEE }> {
     const tee = await this.config.connection.ensureConnected();
     const url = `${trimSlash(tee.endpoint)}${path}`;
-    const paidFetch = await this.buildPaidFetch(tee.dispatcher);
+    const paidFetch = this.buildPaidFetch(tee.dispatcher);
 
     let response: Response;
     try {
