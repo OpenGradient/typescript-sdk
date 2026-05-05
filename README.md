@@ -1,6 +1,6 @@
 # OpenGradient TypeScript SDK
 
-A TypeScript/JavaScript SDK for performing on-chain inference using the OpenGradient network. Run machine learning models and LLMs directly on the blockchain with robust transaction handling and retry mechanisms.
+A TypeScript/JavaScript SDK for performing LLM chat and completion via OpenGradient's TEE (Trusted Execution Environment) with [x402](https://x402.org) payment protocol support.
 
 ## Installation
 
@@ -8,48 +8,103 @@ A TypeScript/JavaScript SDK for performing on-chain inference using the OpenGrad
 npm install opengradient-sdk
 ```
 
+## Requirements
+
+- Node.js 18+ (for global `fetch`)
+
 ## Quick Start
 
 ```typescript
-import { Client, InferenceMode, LLMInferenceMode } from 'opengradient-sdk';
+import { Client, TEE_LLM } from "opengradient-sdk";
 
-// Initialize the client
 const client = new Client({
-  privateKey: 'your-private-key'
+  privateKey: process.env.PRIVATE_KEY!, // EVM private key (with or without 0x prefix)
 });
 
-// Run LLM chat inference
-const [txHash, finishReason, response] = await client.llmChat(
-  'Qwen/Qwen2.5-72B-Instruct',
-  LLMInferenceMode.VANILLA,
-  [{ role: 'user', content: 'Hello!' }],
-  100 // max tokens
-);
-
-// Run general model inference
-const modelInput = {
-  num_input1: [1.0, 2.0, 3.0],
-  num_input2: 10,
-  str_input1: ["hello", "ONNXY"],
-  str_input2: " world"
-};
-
-const [txHash, output] = await client.infer(
-  "QmbUqS93oc4JTLMHwpVxsE39mhNxy6hpf6Py3r9oANr8aZ",
-  InferenceMode.VANILLA,
-  modelInput
-);
+// Non-streaming chat
+const result = await client.llm.chat({
+  model: TEE_LLM.CLAUDE_3_5_HAIKU,
+  messages: [{ role: "user", content: "Hello!" }],
+  maxTokens: 100,
+});
+console.log(result.chatOutput?.content);
+console.log("payment hash:", result.paymentHash);
 ```
 
-## Features
+### Streaming chat
 
-- On-chain ML model inference
-- LLM completion and chat interfaces
-- Support for vanilla, ZKML and TEE (Trusted Execution Environment) inference modes
-- Automatic transaction retry with configurable parameters
-- Built-in gas estimation and management
-- Tool calling support for LLM chat
+```typescript
+import { Client, TEE_LLM } from "opengradient-sdk";
 
-## Contributing
+const client = new Client({ privateKey: process.env.PRIVATE_KEY! });
 
-We welcome contributions! Please check our contribution guidelines for more details.
+const stream = client.llm.chat({
+  model: TEE_LLM.CLAUDE_3_5_HAIKU,
+  messages: [{ role: "user", content: "Stream me a haiku." }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta.content ?? "");
+}
+```
+
+### Tool / function calling
+
+```typescript
+const result = await client.llm.chat({
+  model: TEE_LLM.GPT_4O,
+  messages: [{ role: "user", content: "What's the weather in Paris?" }],
+  tools: [
+    {
+      type: "function",
+      function: {
+        name: "get_weather",
+        description: "Get current weather for a city",
+        parameters: {
+          type: "object",
+          properties: { city: { type: "string" } },
+          required: ["city"],
+        },
+      },
+    },
+  ],
+});
+console.log(result.chatOutput?.tool_calls);
+```
+
+### Completion
+
+```typescript
+const result = await client.llm.completion({
+  model: TEE_LLM.CLAUDE_3_5_HAIKU,
+  prompt: "The capital of France is",
+  maxTokens: 20,
+});
+console.log(result.completionOutput);
+```
+
+## x402 Settlement Modes
+
+```typescript
+import { X402SettlementMode } from "opengradient-sdk";
+
+await client.llm.chat({
+  model: TEE_LLM.GPT_4O,
+  messages: [{ role: "user", content: "Hi" }],
+  x402SettlementMode: X402SettlementMode.SETTLE_BATCH, // default
+});
+```
+
+- `SETTLE` — records input/output hashes only (most privacy-preserving).
+- `SETTLE_METADATA` — records full model info, complete input/output, and metadata.
+- `SETTLE_BATCH` — aggregates multiple inferences into a single on-chain settlement (most cost-efficient, default).
+
+## Available models
+
+See `TEE_LLM` for the supported models, including:
+
+- `TEE_LLM.GPT_4O`, `TEE_LLM.GPT_4_1_2025_04_14`, `TEE_LLM.O4_MINI`
+- `TEE_LLM.CLAUDE_3_5_HAIKU`, `TEE_LLM.CLAUDE_3_7_SONNET`, `TEE_LLM.CLAUDE_4_0_SONNET`
+- `TEE_LLM.GEMINI_2_0_FLASH`, `TEE_LLM.GEMINI_2_5_FLASH`, `TEE_LLM.GEMINI_2_5_FLASH_LITE`, `TEE_LLM.GEMINI_2_5_PRO`
+- `TEE_LLM.GROK_2_1212`, `TEE_LLM.GROK_2_VISION_LATEST`, `TEE_LLM.GROK_3_BETA`, `TEE_LLM.GROK_3_MINI_BETA`, `TEE_LLM.GROK_4_1_FAST`, `TEE_LLM.GROK_4_1_FAST_NON_REASONING`

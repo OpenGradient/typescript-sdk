@@ -1,7 +1,7 @@
 {
   "name": "opengradient-sdk",
-  "version": "1.0.2",
-  "description": "Official TypeScript SDK for interacting with OpenGradient network",
+  "version": "2.0.0",
+  "description": "Official TypeScript SDK for OpenGradient TEE LLM chat and completion",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -23,9 +23,9 @@
     "opengradient",
     "sdk",
     "typescript",
-    "web3",
-    "blockchain",
-    "ethereum"
+    "llm",
+    "tee",
+    "x402"
   ],
   "author": "OpenGradient",
   "license": "MIT",
@@ -33,6 +33,9 @@
     "url": "https://github.com/OpenGradient/ts-sdk/issues"
   },
   "homepage": "https://github.com/OpenGradient/ts-sdk#readme",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^22.13.1",
@@ -49,10 +52,6 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@types/web3": "^1.2.2",
-    "dotenv": "^16.4.7",
-    "web3": "^1.10.3",
-    "web3-core": "^1.10.3",
-    "web3-eth-contract": "^1.10.3"
+    "viem": "^2.21.26"
   }
 }
