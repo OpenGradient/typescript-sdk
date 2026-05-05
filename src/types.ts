@@ -49,7 +49,7 @@ export interface ChatMessage {
   role: string;
   content?: string | null;
   name?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   tool_calls?: any[];
   tool_call_id?: string;
 }
@@ -57,7 +57,7 @@ export interface ChatMessage {
 export interface ToolFunction {
   name: string;
   description?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   parameters?: Record<string, any>;
 }
 
@@ -105,7 +105,7 @@ export interface TextGenerationOutput {
 export interface StreamDelta {
   content?: string;
   role?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   tool_calls?: any[];
 }
 

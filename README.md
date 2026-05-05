@@ -101,6 +101,18 @@ await client.llm.chat({
 - `SETTLE_METADATA` — records full model info, complete input/output, and metadata.
 - `SETTLE_BATCH` — aggregates multiple inferences into a single on-chain settlement (most cost-efficient, default).
 
+## Development
+
+```bash
+npm install      # install deps
+npm run lint     # ESLint over src/
+npm test         # Jest unit tests
+npm run build    # tsc → dist/
+npm run format   # prettier --write
+```
+
+CI runs `lint`, `test`, and `build` on Node 18 and 20 — see `.github/workflows/ci.yml`.
+
 ## Available models
 
 See `TEE_LLM` for the supported models, including:

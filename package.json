@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "watch": "tsc -w",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\""

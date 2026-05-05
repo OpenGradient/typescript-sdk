@@ -52,7 +52,7 @@ export class LLM {
       x402SettlementMode = X402SettlementMode.SETTLE_BATCH,
     } = params;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const payload: Record<string, any> = {
       model: stripProvider(model),
       prompt,
@@ -102,7 +102,7 @@ export class LLM {
 
     const result = (await response.json()) as {
       choices?: Array<{
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         message?: any;
         finish_reason?: string;
       }>;
@@ -170,7 +170,7 @@ export class LLM {
   private buildChatPayload(
     params: ChatParams,
     stream: boolean,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   ): Record<string, any> {
     const {
       model,
@@ -182,7 +182,7 @@ export class LLM {
       toolChoice,
     } = params;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const payload: Record<string, any> = {
       model: stripProvider(model),
       messages,
@@ -212,7 +212,7 @@ export class LLM {
 
   private async post(
     url: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     body: Record<string, any>,
     settlementMode: X402SettlementMode,
   ): Promise<Response> {
@@ -252,9 +252,9 @@ function trimSlash(url: string): string {
   return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function parseStreamChunk(data: any): StreamChunk {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const choices: StreamChoice[] = (data.choices ?? []).map((c: any) => ({
     delta: {
       content: c.delta?.content,
