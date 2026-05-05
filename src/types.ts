@@ -253,8 +253,6 @@ export interface ClientConfig {
    * its TLS certificate pinned to the registered value.
    */
   llmServerUrl?: string;
-  /** Override the x402 settlement network. Defaults to `base`. */
-  network?: string;
   /**
    * Maximum payment amount in atomic units the client will authorize per
    * request. Defaults to the x402-fetch default (0.10 USDC, i.e. `100_000n`).

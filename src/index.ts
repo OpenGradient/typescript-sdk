@@ -33,7 +33,6 @@ export {
 export type { ActiveTEE, TEEConnection } from "./teeConnection";
 
 export {
-  DEFAULT_NETWORK_FILTER,
   DEFAULT_OG_RPC_URL,
   DEFAULT_TEE_REGISTRY_ADDRESS,
   DEFAULT_OG_FAUCET_URL,

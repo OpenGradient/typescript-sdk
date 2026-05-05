@@ -7,7 +7,6 @@ import {
 } from "./teeConnection";
 import { TEERegistry } from "./teeRegistry";
 import {
-  DEFAULT_NETWORK_FILTER,
   DEFAULT_OG_RPC_URL,
   DEFAULT_TEE_REGISTRY_ADDRESS,
 } from "./defaults";
@@ -53,7 +52,6 @@ export class Client {
 
     this.llm = new LLM({
       privateKey,
-      network: config.network ?? DEFAULT_NETWORK_FILTER,
       maxPaymentValue: config.maxPaymentValue,
       connection,
     });

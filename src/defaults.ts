@@ -11,11 +11,6 @@ export const DEFAULT_TEE_REGISTRY_ADDRESS =
   "0x4e72238852f3c918f4E4e57AeC9280dDB0c80248";
 
 /**
- * Default x402 settlement network. OpenGradient settles in OPG on Base.
- */
-export const DEFAULT_NETWORK_FILTER = "base";
-
-/**
  * Base URL for the OpenGradient faucet service.
  */
 export const DEFAULT_OG_FAUCET_URL = "https://faucet.opengradient.ai/?address=";

@@ -29,7 +29,6 @@ const COMPLETION_ENDPOINT = "/v1/completions";
 
 export interface LLMConfig {
   privateKey: `0x${string}`;
-  network: string;
   maxPaymentValue?: bigint;
   /** Resolves the active TEE endpoint and TLS dispatcher. */
   connection: TEEConnection;

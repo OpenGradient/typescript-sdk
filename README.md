@@ -11,7 +11,7 @@ npm install opengradient-sdk
 ## Requirements
 
 - Node.js 18+ (for global `fetch`)
-- A funded EVM wallet on Base (settlement happens in OPG on the Base network via [x402](https://x402.org))
+- A funded EVM wallet on Base (settlement happens in USDC on the Base network via [x402](https://x402.org))
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ const client = new Client({
 
 // Non-streaming chat
 const result = await client.llm.chat({
-  model: TEE_LLM.CLAUDE_3_5_HAIKU,
+  model: TEE_LLM.CLAUDE_HAIKU_4_5,
   messages: [{ role: "user", content: "Hello!" }],
   maxTokens: 100,
 });
@@ -40,7 +40,7 @@ import { Client, TEE_LLM } from "opengradient-sdk";
 const client = new Client({ privateKey: process.env.PRIVATE_KEY! });
 
 const stream = client.llm.chat({
-  model: TEE_LLM.CLAUDE_3_5_HAIKU,
+  model: TEE_LLM.CLAUDE_HAIKU_4_5,
   messages: [{ role: "user", content: "Stream me a haiku." }],
   stream: true,
 });
@@ -54,7 +54,7 @@ for await (const chunk of stream) {
 
 ```typescript
 const result = await client.llm.chat({
-  model: TEE_LLM.GPT_4O,
+  model: TEE_LLM.GPT_5,
   messages: [{ role: "user", content: "What's the weather in Paris?" }],
   tools: [
     {
@@ -78,7 +78,7 @@ console.log(result.chatOutput?.tool_calls);
 
 ```typescript
 const result = await client.llm.completion({
-  model: TEE_LLM.CLAUDE_3_5_HAIKU,
+  model: TEE_LLM.CLAUDE_HAIKU_4_5,
   prompt: "The capital of France is",
   maxTokens: 20,
 });
@@ -91,15 +91,15 @@ console.log(result.completionOutput);
 import { X402SettlementMode } from "opengradient-sdk";
 
 await client.llm.chat({
-  model: TEE_LLM.GPT_4O,
+  model: TEE_LLM.GPT_5,
   messages: [{ role: "user", content: "Hi" }],
-  x402SettlementMode: X402SettlementMode.SETTLE_BATCH, // default
+  x402SettlementMode: X402SettlementMode.BATCH_HASHED, // default
 });
 ```
 
-- `SETTLE` — records input/output hashes only (most privacy-preserving).
-- `SETTLE_METADATA` — records full model info, complete input/output, and metadata.
-- `SETTLE_BATCH` — aggregates multiple inferences into a single on-chain settlement (most cost-efficient, default).
+- `PRIVATE` — payment-only settlement; no input/output hashes posted on-chain (most privacy-preserving).
+- `BATCH_HASHED` — aggregates multiple inferences into a single Merkle-tree settlement of input/output hashes (most cost-efficient, default).
+- `INDIVIDUAL_FULL` — records full input data, output data, and verification on-chain per request (highest gas, maximum auditability).
 
 ## Development
 
@@ -115,9 +115,10 @@ CI runs `lint`, `test`, and `build` on Node 18 and 20 — see `.github/workflows
 
 ## Available models
 
-See `TEE_LLM` for the supported models, including:
+See `TEE_LLM` in `src/types.ts` for the full list. Highlights:
 
-- `TEE_LLM.GPT_4O`, `TEE_LLM.GPT_4_1_2025_04_14`, `TEE_LLM.O4_MINI`
-- `TEE_LLM.CLAUDE_3_5_HAIKU`, `TEE_LLM.CLAUDE_3_7_SONNET`, `TEE_LLM.CLAUDE_4_0_SONNET`
-- `TEE_LLM.GEMINI_2_0_FLASH`, `TEE_LLM.GEMINI_2_5_FLASH`, `TEE_LLM.GEMINI_2_5_FLASH_LITE`, `TEE_LLM.GEMINI_2_5_PRO`
-- `TEE_LLM.GROK_2_1212`, `TEE_LLM.GROK_2_VISION_LATEST`, `TEE_LLM.GROK_3_BETA`, `TEE_LLM.GROK_3_MINI_BETA`, `TEE_LLM.GROK_4_1_FAST`, `TEE_LLM.GROK_4_1_FAST_NON_REASONING`
+- **OpenAI**: `GPT_5`, `GPT_5_MINI`, `GPT_5_2`, `GPT_5_4`, `GPT_5_4_MINI`, `GPT_5_4_NANO`, `GPT_5_5`, `GPT_4_1_2025_04_14`, `GPT_4_1_MINI`, `GPT_4_1_NANO`, `O3`, `O4_MINI`
+- **Anthropic**: `CLAUDE_HAIKU_4_5`, `CLAUDE_SONNET_4_5`, `CLAUDE_SONNET_4_6`, `CLAUDE_OPUS_4_5`, `CLAUDE_OPUS_4_6`, `CLAUDE_OPUS_4_7`
+- **Google**: `GEMINI_3_FLASH`, `GEMINI_3_1_PRO_PREVIEW`, `GEMINI_3_1_FLASH_LITE_PREVIEW`, `GEMINI_2_5_FLASH`, `GEMINI_2_5_PRO`, `GEMINI_2_5_FLASH_LITE`
+- **xAI**: `GROK_4`, `GROK_4_FAST`, `GROK_4_1_FAST`, `GROK_4_1_FAST_NON_REASONING`, `GROK_4_20_REASONING`, `GROK_4_20_NON_REASONING`, `GROK_CODE_FAST_1`
+- **ByteDance**: `SEED_1_6`, `SEED_1_8`, `SEED_2_0_LITE`

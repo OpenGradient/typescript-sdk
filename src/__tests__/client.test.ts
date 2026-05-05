@@ -3,7 +3,6 @@ import {
   TEE_LLM,
   X402SettlementMode,
   OpenGradientError,
-  DEFAULT_NETWORK_FILTER,
 } from "../index";
 
 describe("Client construction", () => {
@@ -33,10 +32,6 @@ describe("Public exports", () => {
     expect(X402SettlementMode.PRIVATE).toBe("private");
     expect(X402SettlementMode.BATCH_HASHED).toBe("batch");
     expect(X402SettlementMode.INDIVIDUAL_FULL).toBe("individual");
-  });
-
-  it("defaults the settlement network to base", () => {
-    expect(DEFAULT_NETWORK_FILTER).toBe("base");
   });
 
   it("OpenGradientError preserves status code", () => {
