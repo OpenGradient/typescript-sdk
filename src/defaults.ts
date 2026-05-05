@@ -1,75 +1,35 @@
-// src/defaults.ts
-
 /**
- * Default RPC URL for the OpenGradient blockchain
+ * Default OpenGradient TEE LLM server URL.
  */
-export const DEFAULT_RPC_URL = "https://eth-devnet.opengradient.ai";
+export const DEFAULT_OPENGRADIENT_LLM_SERVER_URL = "https://llmogevm.opengradient.ai";
 
 /**
- * Default API URL for the OpenGradient blockchain
+ * Default OpenGradient TEE LLM streaming server URL.
  */
-export const DEFAULT_API_URL = "https://sdk-devnet.opengradient.ai";
+export const DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL = "https://llmogevm.opengradient.ai";
 
 /**
- * Base URL for the OpenGradient faucet service
- * Append wallet address to this URL to request tokens
+ * Default x402 settlement network. OpenGradient settles in OPG on Base.
+ */
+export const DEFAULT_NETWORK_FILTER = "base";
+
+/**
+ * Base URL for the OpenGradient faucet service.
  */
 export const DEFAULT_OG_FAUCET_URL = "https://faucet.opengradient.ai/?address=";
 
 /**
- * URL for signing up to the OpenGradient Hub
+ * URL for signing up to the OpenGradient Hub.
  */
 export const DEFAULT_HUB_SIGNUP_URL = "https://hub.opengradient.ai/signup";
 
 /**
- * Default smart contract address for inference operations
+ * Base URL for the blockchain explorer.
  */
-export const DEFAULT_INFERENCE_CONTRACT_ADDRESS =
-  "0x8383C9bD7462F12Eb996DD02F78234C0421A6FaE";
+export const DEFAULT_BLOCKCHAIN_EXPLORER = "https://explorer.opengradient.ai/tx/";
 
-/**
- * Base URL for the blockchain explorer
- * Append transaction hash to this URL to view transaction details
- */
-export const DEFAULT_BLOCKCHAIN_EXPLORER =
-  "https://explorer.opengradient.ai/tx/";
+export const getExplorerUrl = (txHash: string): string =>
+  `${DEFAULT_BLOCKCHAIN_EXPLORER}${txHash}`;
 
-/**
- * Default host address for the image generation service
- */
-export const DEFAULT_IMAGE_GEN_HOST = "18.217.25.69";
-
-/**
- * Default port for the image generation service
- */
-export const DEFAULT_IMAGE_GEN_PORT = 5125;
-
-/**
- * Helper function to get the explorer URL for a transaction
- * @param txHash - The transaction hash
- * @returns The complete explorer URL for the transaction
- */
-export const getExplorerUrl = (txHash: string): string => {
-  return `${DEFAULT_BLOCKCHAIN_EXPLORER}${txHash}`;
-};
-
-/**
- * Helper function to get the faucet URL for an address
- * @param address - The wallet address
- * @returns The complete faucet URL for the address
- */
-export const getFaucetUrl = (address: string): string => {
-  return `${DEFAULT_OG_FAUCET_URL}${address}`;
-};
-
-// Export a default configuration object
-export const DEFAULT_CONFIG = {
-  rpcUrl: DEFAULT_RPC_URL,
-  apiUrl: DEFAULT_API_URL,
-  inferenceContractAddress: DEFAULT_INFERENCE_CONTRACT_ADDRESS,
-  imageGenHost: DEFAULT_IMAGE_GEN_HOST,
-  imageGenPort: DEFAULT_IMAGE_GEN_PORT,
-} as const;
-
-// Type for the default configuration
-export type DefaultConfig = typeof DEFAULT_CONFIG;
+export const getFaucetUrl = (address: string): string =>
+  `${DEFAULT_OG_FAUCET_URL}${address}`;

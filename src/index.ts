@@ -1,35 +1,33 @@
 export { Client } from "./client";
+export { LLM } from "./llm";
 
 export {
-  InferenceMode,
-  LLMInferenceMode,
-  LLMRequest,
-  LLMChatMessage,
-  LLMChatRequest,
-  ClientConfig,
-  RawModelInput,
+  TEE_LLM,
+  X402SettlementMode,
   OpenGradientError,
 } from "./types";
 
-// Export constants
-export {
-  LLM_TX_TIMEOUT,
-  INFERENCE_TX_TIMEOUT,
-  REGULAR_TX_TIMEOUT,
-  DEFAULT_MAX_RETRY,
-  DEFAULT_RETRY_DELAY_SEC,
-  INFERENCE_PRECOMPILE_ADDRESS,
-} from "./constants";
+export type {
+  ChatMessage,
+  ChatParams,
+  ClientConfig,
+  CompletionParams,
+  StreamChoice,
+  StreamChunk,
+  StreamDelta,
+  StreamUsage,
+  TextGenerationOutput,
+  Tool,
+  ToolFunction,
+} from "./types";
 
 export {
-  DEFAULT_CONFIG,
-  DEFAULT_RPC_URL,
+  DEFAULT_NETWORK_FILTER,
+  DEFAULT_OPENGRADIENT_LLM_SERVER_URL,
+  DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
   DEFAULT_OG_FAUCET_URL,
   DEFAULT_HUB_SIGNUP_URL,
-  DEFAULT_INFERENCE_CONTRACT_ADDRESS,
   DEFAULT_BLOCKCHAIN_EXPLORER,
-  DEFAULT_IMAGE_GEN_HOST,
-  DEFAULT_IMAGE_GEN_PORT,
   getExplorerUrl,
   getFaucetUrl,
 } from "./defaults";
