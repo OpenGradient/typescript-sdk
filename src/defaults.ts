@@ -1,14 +1,14 @@
 /**
- * Default OpenGradient TEE LLM server URL.
+ * Default RPC URL for the chain hosting the on-chain TEE registry.
  */
-export const DEFAULT_OPENGRADIENT_LLM_SERVER_URL =
-  "https://llmogevm.opengradient.ai";
+export const DEFAULT_OG_RPC_URL = "https://ogevmdevnet.opengradient.ai";
 
 /**
- * Default OpenGradient TEE LLM streaming server URL.
+ * Default address of the on-chain TEERegistry contract used to discover
+ * verified TEE LLM endpoints and their pinned TLS certificates.
  */
-export const DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL =
-  "https://llmogevm.opengradient.ai";
+export const DEFAULT_TEE_REGISTRY_ADDRESS =
+  "0x4e72238852f3c918f4E4e57AeC9280dDB0c80248";
 
 /**
  * Default x402 settlement network. OpenGradient settles in OPG on Base.

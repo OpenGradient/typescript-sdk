@@ -134,10 +134,13 @@ export interface StreamChunk {
 export interface ClientConfig {
   /** EVM private key (hex string, with or without 0x prefix). */
   privateKey: string;
-  /** Override the OpenGradient TEE LLM server URL. */
+  /**
+   * Override with a hardcoded TEE LLM server URL (dev / self-hosted). When
+   * set, the on-chain TEE registry is bypassed and TLS verification is
+   * disabled. Leave unset to discover an active TEE via the registry with
+   * its TLS certificate pinned to the registered value.
+   */
   llmServerUrl?: string;
-  /** Override the OpenGradient TEE LLM streaming server URL. */
-  llmStreamingServerUrl?: string;
   /** Override the x402 settlement network. Defaults to `base`. */
   network?: string;
   /**
@@ -145,6 +148,10 @@ export interface ClientConfig {
    * request. Defaults to the x402-fetch default (0.10 USDC, i.e. `100_000n`).
    */
   maxPaymentValue?: bigint;
+  /** Override the RPC URL used to query the on-chain TEE registry. */
+  rpcUrl?: string;
+  /** Override the deployed TEERegistry contract address. */
+  teeRegistryAddress?: string;
 }
 
 export class OpenGradientError extends Error {
