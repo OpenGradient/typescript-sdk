@@ -85,6 +85,56 @@ const result = await client.llm.completion({
 console.log(result.completionOutput);
 ```
 
+## OPG Token Approval
+
+Before making LLM requests, your wallet must approve OPG token spending via the [Permit2](https://github.com/Uniswap/permit2) protocol. `ensureOpgApproval` only sends an on-chain transaction when the current allowance drops below the threshold, so it's safe to call on every server startup:
+
+```typescript
+import { privateKeyToAccount } from "viem/accounts";
+import { ensureOpgApproval } from "opengradient-sdk";
+
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+
+// Only sends a tx when allowance < 5 OPG, then approves 100 OPG so
+// subsequent restarts are free. Defaults approveAmount to 2 * minAllowance.
+const result = await ensureOpgApproval(account, 5, 100);
+console.log("allowance after:", result.allowanceAfter, "tx:", result.txHash);
+```
+
+The wallet must hold OPG on Base mainnet. Override the RPC with the `BASE_MAINNET_RPC` environment variable if you don't want to use the default public node.
+
+### End-to-end example
+
+```typescript
+import { privateKeyToAccount } from "viem/accounts";
+import { Client, TEE_LLM, ensureOpgApproval } from "opengradient-sdk";
+
+async function main() {
+  const privateKey = process.env.PRIVATE_KEY as `0x${string}`;
+
+  // 1. Make sure the wallet has approved Permit2 to spend OPG.
+  //    No-op when the allowance is already above the threshold.
+  const account = privateKeyToAccount(privateKey);
+  await ensureOpgApproval(account, 5, 100);
+
+  // 2. Run a TEE-secured chat completion settled in OPG via x402.
+  const client = new Client({ privateKey });
+  try {
+    const result = await client.llm.chat({
+      model: TEE_LLM.CLAUDE_3_5_HAIKU,
+      messages: [{ role: "user", content: "Hello!" }],
+      maxTokens: 100,
+    });
+    console.log(result.chatOutput?.content);
+    console.log("payment hash:", result.paymentHash);
+  } finally {
+    await client.close();
+  }
+}
+
+main();
+```
+
 ## x402 Settlement Modes
 
 ```typescript

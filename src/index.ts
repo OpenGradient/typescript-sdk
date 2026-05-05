@@ -41,3 +41,10 @@ export {
   getExplorerUrl,
   getFaucetUrl,
 } from "./defaults";
+
+export {
+  ensureOpgApproval,
+  BASE_OPG_ADDRESS,
+  BASE_MAINNET_RPC,
+} from "./opgToken";
+export type { Permit2ApprovalResult } from "./opgToken";
