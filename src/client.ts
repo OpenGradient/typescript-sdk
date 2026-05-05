@@ -1,12 +1,9 @@
-import { privateKeyToAccount } from "viem/accounts";
 import { LLM } from "./llm";
-import { X402Client } from "./x402";
 import { ClientConfig } from "./types";
 import {
   DEFAULT_NETWORK_FILTER,
   DEFAULT_OPENGRADIENT_LLM_SERVER_URL,
   DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
-  DEFAULT_RPC_URL,
 } from "./defaults";
 
 /**
@@ -29,18 +26,14 @@ export class Client {
     const privateKey = (
       config.privateKey.startsWith("0x") ? config.privateKey : `0x${config.privateKey}`
     ) as `0x${string}`;
-    const account = privateKeyToAccount(privateKey);
 
-    const x402Client = new X402Client(
-      account,
-      config.rpcUrl ?? DEFAULT_RPC_URL,
-      config.network ?? DEFAULT_NETWORK_FILTER,
-    );
-
-    this.llm = new LLM(
-      x402Client,
-      config.llmServerUrl ?? DEFAULT_OPENGRADIENT_LLM_SERVER_URL,
-      config.llmStreamingServerUrl ?? DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
-    );
+    this.llm = new LLM({
+      privateKey,
+      network: config.network ?? DEFAULT_NETWORK_FILTER,
+      maxPaymentValue: config.maxPaymentValue,
+      serverUrl: config.llmServerUrl ?? DEFAULT_OPENGRADIENT_LLM_SERVER_URL,
+      streamingServerUrl:
+        config.llmStreamingServerUrl ?? DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
+    });
   }
 }

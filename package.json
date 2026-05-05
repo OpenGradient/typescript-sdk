@@ -52,6 +52,6 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "viem": "^2.21.26"
+    "x402-fetch": "^1.2.0"
   }
 }

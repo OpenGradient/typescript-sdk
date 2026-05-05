@@ -1,3 +1,4 @@
+import { createSigner, wrapFetchWithPayment } from "x402-fetch";
 import {
   ChatParams,
   CompletionParams,
@@ -7,11 +8,18 @@ import {
   TextGenerationOutput,
   X402SettlementMode,
 } from "./types";
-import { X402Client } from "./x402";
 
 const X402_PLACEHOLDER_API_KEY =
   "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
 const X402_PROCESSING_HASH_HEADER = "x-processing-hash";
+
+export interface LLMConfig {
+  privateKey: `0x${string}`;
+  network: string;
+  maxPaymentValue?: bigint;
+  serverUrl: string;
+  streamingServerUrl: string;
+}
 
 /**
  * LLM inference namespace.
@@ -27,11 +35,9 @@ const X402_PROCESSING_HASH_HEADER = "x-processing-hash";
  *   });
  */
 export class LLM {
-  constructor(
-    private readonly x402Client: X402Client,
-    private readonly serverUrl: string,
-    private readonly streamingServerUrl: string,
-  ) {}
+  private fetchWithPayment?: typeof fetch;
+
+  constructor(private readonly config: LLMConfig) {}
 
   /**
    * Perform a (non-chat) completion via the TEE LLM server.
@@ -56,7 +62,7 @@ export class LLM {
     if (stopSequence && stopSequence.length) payload.stop = stopSequence;
 
     const response = await this.post(
-      `${trimSlash(this.serverUrl)}/v1/completions`,
+      `${trimSlash(this.config.serverUrl)}/v1/completions`,
       payload,
       x402SettlementMode,
     );
@@ -89,7 +95,7 @@ export class LLM {
   private async chatNonStreaming(params: ChatParams): Promise<TextGenerationOutput> {
     const payload = this.buildChatPayload(params, false);
     const response = await this.post(
-      `${trimSlash(this.serverUrl)}/v1/chat/completions`,
+      `${trimSlash(this.config.serverUrl)}/v1/chat/completions`,
       payload,
       params.x402SettlementMode ?? X402SettlementMode.SETTLE_BATCH,
     );
@@ -120,7 +126,7 @@ export class LLM {
   private async *chatStream(params: ChatParams): AsyncIterable<StreamChunk> {
     const payload = this.buildChatPayload(params, true);
     const response = await this.post(
-      `${trimSlash(this.streamingServerUrl)}/v1/chat/completions`,
+      `${trimSlash(this.config.streamingServerUrl)}/v1/chat/completions`,
       payload,
       params.x402SettlementMode ?? X402SettlementMode.SETTLE_BATCH,
     );
@@ -192,15 +198,28 @@ export class LLM {
     return payload;
   }
 
+  private async getFetch(): Promise<typeof fetch> {
+    if (!this.fetchWithPayment) {
+      const signer = await createSigner(this.config.network, this.config.privateKey);
+      this.fetchWithPayment = wrapFetchWithPayment(
+        fetch,
+        signer,
+        this.config.maxPaymentValue,
+      ) as typeof fetch;
+    }
+    return this.fetchWithPayment;
+  }
+
   private async post(
     url: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body: Record<string, any>,
     settlementMode: X402SettlementMode,
   ): Promise<Response> {
+    const paidFetch = await this.getFetch();
     let response: Response;
     try {
-      response = await this.x402Client.fetch(url, {
+      response = await paidFetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

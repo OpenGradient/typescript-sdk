@@ -11,6 +11,7 @@ npm install opengradient-sdk
 ## Requirements
 
 - Node.js 18+ (for global `fetch`)
+- A funded EVM wallet on Base (settlement happens in OPG on the Base network via [x402](https://x402.org))
 
 ## Quick Start
 

@@ -9,14 +9,9 @@ export const DEFAULT_OPENGRADIENT_LLM_SERVER_URL = "https://llmogevm.opengradien
 export const DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL = "https://llmogevm.opengradient.ai";
 
 /**
- * Default network filter for selecting x402 payment requirements.
+ * Default x402 settlement network. OpenGradient settles in OPG on Base.
  */
-export const DEFAULT_NETWORK_FILTER = "og-evm";
-
-/**
- * Default EVM JSON-RPC URL used to fetch chain id for x402 signing.
- */
-export const DEFAULT_RPC_URL = "https://ogevmdevnet.opengradient.ai";
+export const DEFAULT_NETWORK_FILTER = "base";
 
 /**
  * Base URL for the OpenGradient faucet service.

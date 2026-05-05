@@ -138,10 +138,13 @@ export interface ClientConfig {
   llmServerUrl?: string;
   /** Override the OpenGradient TEE LLM streaming server URL. */
   llmStreamingServerUrl?: string;
-  /** Override the network filter used to select x402 payment requirements. */
+  /** Override the x402 settlement network. Defaults to `base`. */
   network?: string;
-  /** Override the EVM JSON-RPC URL used to fetch chain id for x402 signing. */
-  rpcUrl?: string;
+  /**
+   * Maximum payment amount in atomic units the client will authorize per
+   * request. Defaults to the x402-fetch default (0.10 USDC, i.e. `100_000n`).
+   */
+  maxPaymentValue?: bigint;
 }
 
 export class OpenGradientError extends Error {
