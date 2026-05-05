@@ -1,9 +1,15 @@
 import { LLM } from "./llm";
 import { ClientConfig } from "./types";
 import {
+  RegistryTEEConnection,
+  StaticTEEConnection,
+  type TEEConnection,
+} from "./teeConnection";
+import { TEERegistry } from "./teeRegistry";
+import {
   DEFAULT_NETWORK_FILTER,
-  DEFAULT_OPENGRADIENT_LLM_SERVER_URL,
-  DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
+  DEFAULT_OG_RPC_URL,
+  DEFAULT_TEE_REGISTRY_ADDRESS,
 } from "./defaults";
 
 /**
@@ -11,6 +17,11 @@ import {
  *
  * Provides access to LLM chat and completion via OpenGradient's TEE
  * (Trusted Execution Environment) with x402 payment protocol.
+ *
+ * By default, the TEE endpoint is resolved from the on-chain TEE registry and
+ * the TLS certificate is pinned to the value stored at registration time.
+ * Pass `llmServerUrl` to override with a hardcoded URL (development /
+ * self-hosted TEE servers; TLS verification is disabled).
  *
  * Usage:
  *   const client = new Client({ privateKey: "0x..." });
@@ -29,14 +40,27 @@ export class Client {
         : `0x${config.privateKey}`
     ) as `0x${string}`;
 
+    let connection: TEEConnection;
+    if (config.llmServerUrl) {
+      connection = new StaticTEEConnection(config.llmServerUrl);
+    } else {
+      const registry = new TEERegistry(
+        config.rpcUrl ?? DEFAULT_OG_RPC_URL,
+        config.teeRegistryAddress ?? DEFAULT_TEE_REGISTRY_ADDRESS,
+      );
+      connection = new RegistryTEEConnection(registry);
+    }
+
     this.llm = new LLM({
       privateKey,
       network: config.network ?? DEFAULT_NETWORK_FILTER,
       maxPaymentValue: config.maxPaymentValue,
-      serverUrl: config.llmServerUrl ?? DEFAULT_OPENGRADIENT_LLM_SERVER_URL,
-      streamingServerUrl:
-        config.llmStreamingServerUrl ??
-        DEFAULT_OPENGRADIENT_LLM_STREAMING_SERVER_URL,
+      connection,
     });
+  }
+
+  /** Tear down dispatchers and any background refresh timers. */
+  async close(): Promise<void> {
+    await this.llm.close();
   }
 }

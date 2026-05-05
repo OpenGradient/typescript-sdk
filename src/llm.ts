@@ -1,4 +1,5 @@
 import { createSigner, wrapFetchWithPayment } from "x402-fetch";
+import type { Agent } from "undici";
 import {
   ChatParams,
   CompletionParams,
@@ -8,6 +9,7 @@ import {
   TextGenerationOutput,
   X402SettlementMode,
 } from "./types";
+import type { ActiveTEE, TEEConnection } from "./teeConnection";
 
 const X402_PLACEHOLDER_API_KEY =
   "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
@@ -17,8 +19,8 @@ export interface LLMConfig {
   privateKey: `0x${string}`;
   network: string;
   maxPaymentValue?: bigint;
-  serverUrl: string;
-  streamingServerUrl: string;
+  /** Resolves the active TEE endpoint and TLS dispatcher. */
+  connection: TEEConnection;
 }
 
 /**
@@ -27,17 +29,19 @@ export interface LLMConfig {
  * Provides chat and completion access to LLMs hosted in OpenGradient's TEE
  * (Trusted Execution Environment) with x402 payment protocol support.
  *
- * Usage:
- *   const client = new Client({ privateKey });
- *   const result = await client.llm.chat({
- *     model: TEE_LLM.CLAUDE_3_5_HAIKU,
- *     messages: [{ role: "user", content: "Hello" }],
- *   });
+ * The TEE endpoint is normally resolved from the on-chain TEE registry, with
+ * the TLS certificate pinned to the value stored at registration time. Pass
+ * `llmServerUrl` on the `Client` to override with a hardcoded URL.
  */
 export class LLM {
-  private fetchWithPayment?: typeof fetch;
+  private signerPromise?: Promise<unknown>;
 
   constructor(private readonly config: LLMConfig) {}
+
+  /** Tear down dispatchers and any background refresh timers. */
+  async close(): Promise<void> {
+    await this.config.connection.close();
+  }
 
   /**
    * Perform a (non-chat) completion via the TEE LLM server.
@@ -60,8 +64,8 @@ export class LLM {
     };
     if (stopSequence && stopSequence.length) payload.stop = stopSequence;
 
-    const response = await this.post(
-      `${trimSlash(this.config.serverUrl)}/v1/completions`,
+    const { response } = await this.requestWithRetry(
+      "/v1/completions",
       payload,
       x402SettlementMode,
     );
@@ -95,8 +99,8 @@ export class LLM {
     params: ChatParams,
   ): Promise<TextGenerationOutput> {
     const payload = this.buildChatPayload(params, false);
-    const response = await this.post(
-      `${trimSlash(this.config.serverUrl)}/v1/chat/completions`,
+    const { response } = await this.requestWithRetry(
+      "/v1/chat/completions",
       payload,
       params.x402SettlementMode ?? X402SettlementMode.SETTLE_BATCH,
     );
@@ -125,8 +129,8 @@ export class LLM {
 
   private async *chatStream(params: ChatParams): AsyncIterable<StreamChunk> {
     const payload = this.buildChatPayload(params, true);
-    const response = await this.post(
-      `${trimSlash(this.config.streamingServerUrl)}/v1/chat/completions`,
+    const { response } = await this.requestWithRetry(
+      "/v1/chat/completions",
       payload,
       params.x402SettlementMode ?? X402SettlementMode.SETTLE_BATCH,
     );
@@ -196,28 +200,69 @@ export class LLM {
     return payload;
   }
 
-  private async getFetch(): Promise<typeof fetch> {
-    if (!this.fetchWithPayment) {
-      const signer = await createSigner(
+  private async getSigner(): Promise<unknown> {
+    if (!this.signerPromise) {
+      this.signerPromise = createSigner(
         this.config.network,
         this.config.privateKey,
       );
-      this.fetchWithPayment = wrapFetchWithPayment(
-        fetch,
-        signer,
-        this.config.maxPaymentValue,
-      ) as typeof fetch;
     }
-    return this.fetchWithPayment;
+    return this.signerPromise;
   }
 
-  private async post(
-    url: string,
+  /**
+   * Build a paid fetch that injects the TEE's pinned TLS dispatcher into every
+   * request (including x402 payment retries).
+   */
+  private async buildPaidFetch(dispatcher: Agent): Promise<typeof fetch> {
+    const signer = await this.getSigner();
+    const baseFetch: typeof fetch = ((input: any, init?: any) =>
+      fetch(input, { ...(init ?? {}), dispatcher } as any)) as typeof fetch;
+    return wrapFetchWithPayment(
+      baseFetch,
+      signer as any,
+      this.config.maxPaymentValue,
+    ) as typeof fetch;
+  }
 
+  /**
+   * Send a request, lazily resolving the TEE endpoint. On a connection-level
+   * failure the TEE is re-resolved from the registry and the request is
+   * retried once.
+   */
+  private async requestWithRetry(
+    path: string,
     body: Record<string, any>,
     settlementMode: X402SettlementMode,
-  ): Promise<Response> {
-    const paidFetch = await this.getFetch();
+  ): Promise<{ response: Response; tee: ActiveTEE }> {
+    this.config.connection.ensureRefreshLoop();
+    try {
+      return await this.sendOnce(path, body, settlementMode);
+    } catch (e) {
+      if (e instanceof OpenGradientError && e.statusCode !== undefined) {
+        // Server responded with a non-2xx — don't retry.
+        throw e;
+      }
+      try {
+        await this.config.connection.reconnect();
+      } catch (reconnectErr) {
+        throw new OpenGradientError(
+          `TEE LLM request failed and registry refresh failed: ${String(reconnectErr)}`,
+        );
+      }
+      return await this.sendOnce(path, body, settlementMode);
+    }
+  }
+
+  private async sendOnce(
+    path: string,
+    body: Record<string, any>,
+    settlementMode: X402SettlementMode,
+  ): Promise<{ response: Response; tee: ActiveTEE }> {
+    const tee = await this.config.connection.ensureConnected();
+    const url = `${trimSlash(tee.endpoint)}${path}`;
+    const paidFetch = await this.buildPaidFetch(tee.dispatcher);
+
     let response: Response;
     try {
       response = await paidFetch(url, {
@@ -240,7 +285,7 @@ export class LLM {
         response.status,
       );
     }
-    return response;
+    return { response, tee };
   }
 }
 
